@@ -19,7 +19,30 @@
     END LICENSE
 ***/
 
+[DBus (name = "org.freedesktop.login1.Manager")]
+public interface LoginDRemote : GLib.Object {
+    public signal void prepare_for_sleep (bool suspending);
+}
+
 public class PantheonGreeter : Gtk.Window {
+
+    const uint GL_VENDOR = 0x1F00;
+    const string LOGIND_DBUS_NAME = "org.freedesktop.login1";
+    const string LOGIND_DBUS_OBJECT_PATH = "/org/freedesktop/login1";
+
+    delegate unowned string? GlQueryFunc (uint id);
+
+    static bool is_nvidia () {
+        var gl_get_string = (GlQueryFunc) Cogl.get_proc_address ("glGetString");
+        if (gl_get_string == null) {
+            return false;
+        }
+
+        unowned string? vendor = gl_get_string (GL_VENDOR);
+        return (vendor != null && vendor.contains ("NVIDIA Corporation"));
+    }
+
+    LoginDRemote? logind_proxy = null;
 
     public static LoginGateway login_gateway { get; private set; }
 
@@ -241,6 +264,28 @@ public class PantheonGreeter : Gtk.Window {
         clutter.key_press_event.connect (keyboard_navigation);
 
         scroll_event.connect (scroll_navigation);
+
+        // We cannot use the Clutter.Display.gl_video_memory_purged signal here because this is a Gtk.Window.
+        // Instead, listen to resume events through the logind proxy.
+        if (logind_proxy == null && is_nvidia ()) {
+            try {
+                logind_proxy = Bus.get_proxy_sync (BusType.SYSTEM, LOGIND_DBUS_NAME, LOGIND_DBUS_OBJECT_PATH);
+                logind_proxy.prepare_for_sleep.connect (prepare_for_sleep);
+            } catch (Error e) {
+                warning ("Failed to get LoginD proxy: %s", e.message);
+            }
+        }
+    }
+
+    void prepare_for_sleep (bool suspending) {
+        if (suspending) {
+            return;
+        }
+
+        Idle.add(() => {
+            wallpaper.reposition ();
+            return GLib.Source.REMOVE;
+        });
     }
 
     /**
