@@ -23,8 +23,6 @@ public class Wallpaper : Gtk.Stack {
     List<Cancellable> loading_wallpapers = new List<Cancellable> ();
     Queue<Gtk.Image> unused_wallpapers = new Queue<Gtk.Image> ();
 
-    int gpu_limit;
-
     string[] cache_path = {};
     Gdk.Pixbuf[] cache_pixbuf = {};
     int max_cache = 3;
@@ -37,12 +35,6 @@ public class Wallpaper : Gtk.Stack {
 
     public Wallpaper () {
         Object (transition_type: Gtk.StackTransitionType.CROSSFADE);
-    }
-
-    construct {
-        GL.GLint result = 1;
-        GL.glGetIntegerv(GL.GL_MAX_TEXTURE_SIZE, out result);
-        gpu_limit = result;
     }
 
     string get_default () {
