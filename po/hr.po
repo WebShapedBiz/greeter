@@ -119,7 +119,7 @@ msgstr "%A, %B %e"
 #. / Time display, see http://valadoc.org/#!api=glib-2.0/GLib.DateTime.format for more details
 #: src/Widgets/TimeLabel.vala:55
 msgid "%l:%M"
-msgstr "%H:%M"
+msgstr "%k:%M"
 
 #. / AM/PM display, see http://valadoc.org/#!api=glib-2.0/GLib.DateTime.format for more details. If you translate in a language that has no equivalent for AM/PM, keep the original english string.
 #: src/Widgets/TimeLabel.vala:57
